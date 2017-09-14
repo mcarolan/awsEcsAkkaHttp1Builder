@@ -51,7 +51,7 @@ Optional arguments:
 
 Requirements:
     aws:  AWS Command Line Interface
-    jq:   Command-line JSON processor
+    ./jq-linux64:   Command-line JSON processor
 
 Examples:
   Simple deployment of a service (Using env vars for AWS settings):
@@ -240,7 +240,7 @@ function parseImageName() {
 function getCurrentTaskDefinition() {
     if [ $SERVICE != false ]; then
       # Get current task definition name from service
-      TASK_DEFINITION_ARN=`$AWS_ECS describe-services --services $SERVICE --cluster $CLUSTER | jq -r .services[0].taskDefinition`
+      TASK_DEFINITION_ARN=`$AWS_ECS describe-services --services $SERVICE --cluster $CLUSTER | ./jq-linux64 -r .services[0].taskDefinition`
       TASK_DEFINITION=`$AWS_ECS describe-task-definition --task-def $TASK_DEFINITION_ARN`
     fi
 }
@@ -253,28 +253,28 @@ function createNewTaskDefJson() {
       DEF=$( echo "$TASK_DEFINITION" \
             | sed -e "s|\"image\": *\"${imageWithoutTag}:.*\"|\"image\": \"${useImage}\"|g" \
             | sed -e "s|\"image\": *\"${imageWithoutTag}\"|\"image\": \"${useImage}\"|g" \
-            | jq '.taskDefinition' )
+            | ./jq-linux64 '.taskDefinition' )
     else
       DEF=$( echo "$TASK_DEFINITION" \
             | sed -e "s|\(\"image\": *\".*:\)\(.*\)\"|\1${useImage}\"|g" \
-            | jq '.taskDefinition' )
+            | ./jq-linux64 '.taskDefinition' )
     fi
 
-    # Default JQ filter for new task definition
-    NEW_DEF_JQ_FILTER="family: .family, volumes: .volumes, containerDefinitions: .containerDefinitions"
+    # Default ./jq-linux64 filter for new task definition
+    NEW_DEF_./jq-linux64_FILTER="family: .family, volumes: .volumes, containerDefinitions: .containerDefinitions"
 
     # Some options in task definition should only be included in new definition if present in
-    # current definition. If found in current definition, append to JQ filter.
+    # current definition. If found in current definition, append to ./jq-linux64 filter.
     CONDITIONAL_OPTIONS=(networkMode taskRoleArn placementConstraints)
     for i in "${CONDITIONAL_OPTIONS[@]}"; do
       re=".*${i}.*"
       if [[ "$DEF" =~ $re ]]; then
-        NEW_DEF_JQ_FILTER="${NEW_DEF_JQ_FILTER}, ${i}: .${i}"
+        NEW_DEF_./jq-linux64_FILTER="${NEW_DEF_./jq-linux64_FILTER}, ${i}: .${i}"
       fi
     done
 
-    # Build new DEF with jq filter
-    NEW_DEF=$(echo $DEF | jq "{${NEW_DEF_JQ_FILTER}}")
+    # Build new DEF with ./jq-linux64 filter
+    NEW_DEF=$(echo $DEF | ./jq-linux64 "{${NEW_DEF_./jq-linux64_FILTER}}")
 
     # If in test mode output $NEW_DEF
     if [ "$BASH_SOURCE" != "$0" ]; then
@@ -284,7 +284,7 @@ function createNewTaskDefJson() {
 
 function registerNewTaskDefinition() {
     # Register the new task definition, and store its ARN
-    NEW_TASKDEF=`$AWS_ECS register-task-definition --cli-input-json "$NEW_DEF" | jq -r .taskDefinition.taskDefinitionArn`
+    NEW_TASKDEF=`$AWS_ECS register-task-definition --cli-input-json "$NEW_DEF" | ./jq-linux64 -r .taskDefinition.taskDefinitionArn`
 }
 
 function rollback() {
@@ -314,7 +314,7 @@ function updateService() {
     UPDATE=`$AWS_ECS update-service --cluster $CLUSTER --service $SERVICE $DESIRED_COUNT --task-definition $NEW_TASKDEF $DEPLOYMENT_CONFIG`
 
     # Only excepts RUNNING state from services whose desired-count > 0
-    SERVICE_DESIREDCOUNT=`$AWS_ECS describe-services --cluster $CLUSTER --service $SERVICE | jq '.services[]|.desiredCount'`
+    SERVICE_DESIREDCOUNT=`$AWS_ECS describe-services --cluster $CLUSTER --service $SERVICE | ./jq-linux64 '.services[]|.desiredCount'`
     if [ $SERVICE_DESIREDCOUNT -gt 0 ]; then
         # See if the service is able to come up again
         every=10
@@ -325,11 +325,11 @@ function updateService() {
             # new version of the task definition
 
             RUNNING_TASKS=$($AWS_ECS list-tasks --cluster "$CLUSTER"  --service-name "$SERVICE" --desired-status RUNNING \
-                | jq -r '.taskArns[]')
+                | ./jq-linux64 -r '.taskArns[]')
 
             if [[ ! -z $RUNNING_TASKS ]] ; then
                 RUNNING=$($AWS_ECS describe-tasks --cluster "$CLUSTER" --tasks $RUNNING_TASKS \
-                    | jq ".tasks[]| if .taskDefinitionArn == \"$NEW_TASKDEF\" then . else empty end|.lastStatus" \
+                    | ./jq-linux64 ".tasks[]| if .taskDefinitionArn == \"$NEW_TASKDEF\" then . else empty end|.lastStatus" \
                     | grep -e "RUNNING") || :
 
                 if [ "$RUNNING" ]; then
@@ -339,11 +339,11 @@ function updateService() {
                         FAMILY_PREFIX=${TASK_DEFINITION_ARN##*:task-definition/}
                         FAMILY_PREFIX=${FAMILY_PREFIX%*:[0-9]*}
                         TASK_REVISIONS=`$AWS_ECS list-task-definitions --family-prefix $FAMILY_PREFIX --status ACTIVE --sort ASC`
-                        NUM_ACTIVE_REVISIONS=$(echo "$TASK_REVISIONS" | jq ".taskDefinitionArns|length")
+                        NUM_ACTIVE_REVISIONS=$(echo "$TASK_REVISIONS" | ./jq-linux64 ".taskDefinitionArns|length")
                         if [[ $NUM_ACTIVE_REVISIONS -gt $MAX_DEFINITIONS ]]; then
                             LAST_OUTDATED_INDEX=$(($NUM_ACTIVE_REVISIONS - $MAX_DEFINITIONS - 1))
                             for i in $(seq 0 $LAST_OUTDATED_INDEX); do
-                                OUTDATED_REVISION_ARN=$(echo "$TASK_REVISIONS" | jq -r ".taskDefinitionArns[$i]")
+                                OUTDATED_REVISION_ARN=$(echo "$TASK_REVISIONS" | ./jq-linux64 -r ".taskDefinitionArns[$i]")
 
                                 echo "Deregistering outdated task revision: $OUTDATED_REVISION_ARN"
 
@@ -381,7 +381,7 @@ function waitForGreenDeployment {
   echo "Waiting for service deployment to complete..."
   while [ $i -lt $TIMEOUT ]
   do
-    NUM_DEPLOYMENTS=$($AWS_ECS describe-services --services $SERVICE --cluster $CLUSTER | jq "[.services[].deployments[]] | length")
+    NUM_DEPLOYMENTS=$($AWS_ECS describe-services --services $SERVICE --cluster $CLUSTER | ./jq-linux64 "[.services[].deployments[]] | length")
 
     # Wait to see if more than 1 deployment stays running
     # If the wait time has passed, we need to roll back
@@ -417,8 +417,8 @@ if [ "$BASH_SOURCE" == "$0" ]; then
 
     # Check for AWS, AWS Command Line Interface
     require aws
-    # Check for jq, Command-line JSON processor
-    require jq
+    # Check for ./jq-linux64, Command-line JSON processor
+    require ./jq-linux64
 
     # Loop through arguments, two at a time for key and value
     while [[ $# -gt 0 ]]
