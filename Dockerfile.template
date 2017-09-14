@@ -4,6 +4,6 @@ RUN apt-get update -y
 RUN apt-get upgrade -y
 RUN apt-get install default-jre -y
 
-COPY akkaHttp-assembly-0.1-SNAPSHOT.jar /bin
+COPY ${JAR_ARTIFACT_KEY} /bin
 
-CMD java -jar /bin/akkaHttp-assembly-0.1-SNAPSHOT.jar
+CMD java -jar /bin/${JAR_ARTIFACT_KEY}

@@ -5,7 +5,8 @@ phases:
   build:
     commands:
       - echo Build started on `date`
-      - aws s3 cp $JAR_ARTIFACT_SOURCE .
+      - aws s3 cp s3://$JAR_ARTIFACT_BUCKET/$JAR_ARTIFACT_KEY .
+      - sed -e "s/\${JAR_ARTIFACT_KEY}/$JAR_ARTIFACT_KEY/" Dockerfile.template > Dockerfile
       - aws ecr get-login --region $REGION | sh
       - docker build -t $ECR_IMAGE .
       - docker tag $ECR_IMAGE:$ECR_TAG $ECR_URL/$ECR_IMAGE:$ECR_TAG
