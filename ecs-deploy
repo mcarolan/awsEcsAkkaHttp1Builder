@@ -261,7 +261,7 @@ function createNewTaskDefJson() {
     fi
 
     # Default ./jq-linux64 filter for new task definition
-    NEW_DEF_./jq-linux64_FILTER="family: .family, volumes: .volumes, containerDefinitions: .containerDefinitions"
+    NEW_DEF_JQ_FILTER="family: .family, volumes: .volumes, containerDefinitions: .containerDefinitions"
 
     # Some options in task definition should only be included in new definition if present in
     # current definition. If found in current definition, append to ./jq-linux64 filter.
@@ -269,12 +269,12 @@ function createNewTaskDefJson() {
     for i in "${CONDITIONAL_OPTIONS[@]}"; do
       re=".*${i}.*"
       if [[ "$DEF" =~ $re ]]; then
-        NEW_DEF_./jq-linux64_FILTER="${NEW_DEF_./jq-linux64_FILTER}, ${i}: .${i}"
+        NEW_DEF_JQ_FILTER="${NEW_DEF_JQ_FILTER}, ${i}: .${i}"
       fi
     done
 
     # Build new DEF with ./jq-linux64 filter
-    NEW_DEF=$(echo $DEF | ./jq-linux64 "{${NEW_DEF_./jq-linux64_FILTER}}")
+    NEW_DEF=$(echo $DEF | ./jq-linux64 "{${NEW_DEF_JQ_FILTER}}")
 
     # If in test mode output $NEW_DEF
     if [ "$BASH_SOURCE" != "$0" ]; then
