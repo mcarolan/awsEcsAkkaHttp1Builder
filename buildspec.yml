@@ -10,6 +10,7 @@ phases:
       - docker build -t awsecsakkahttp1 .
       - docker tag awsecsakkahttp1:latest 149271426415.dkr.ecr.eu-west-2.amazonaws.com/awsecsakkahttp1:latest 
       - docker push 149271426415.dkr.ecr.eu-west-2.amazonaws.com/awsecsakkahttp1:latest
+      - ./ecs-deploy -c mycluster2 -n myservice -i 149271426415.dkr.ecr.eu-west-2.amazonaws.com/awsecsakkahttp1
   post_build:
     commands:
       - echo Build completed on `date`
