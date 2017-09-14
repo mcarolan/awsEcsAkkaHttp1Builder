@@ -15,7 +15,7 @@ TAGONLY=""
 ENABLE_ROLLBACK=false
 AWS_CLI=$(which aws)
 AWS_ECS="$AWS_CLI --output json ecs"
-JQ=jq-linux64
+JQ=./jq-linux64
 
 function usage() {
     cat <<EOM
