@@ -1,0 +1,68 @@
+{
+    "services": [
+        {
+            "status": "ACTIVE", 
+            "taskDefinition": "arn:aws:ecs:eu-west-2:149271426415:task-definition/frontend:11", 
+            "pendingCount": 0, 
+            "loadBalancers": [
+                {
+                    "containerName": "frontend", 
+                    "containerPort": 9000, 
+                    "loadBalancerName": "awsEcsAkkaHttpLB"
+                }
+            ], 
+            "roleArn": "arn:aws:iam::149271426415:role/ecsServiceRole", 
+            "placementConstraints": [], 
+            "createdAt": 1505379953.764, 
+            "desiredCount": 1, 
+            "serviceName": "awsEcsAkkaHttpService2", 
+            "clusterArn": "arn:aws:ecs:eu-west-2:149271426415:cluster/mycluster2", 
+            "serviceArn": "arn:aws:ecs:eu-west-2:149271426415:service/awsEcsAkkaHttpService2", 
+            "deploymentConfiguration": {
+                "maximumPercent": 200, 
+                "minimumHealthyPercent": 50
+            }, 
+            "deployments": [
+                {
+                    "status": "PRIMARY", 
+                    "pendingCount": 0, 
+                    "createdAt": 1505379953.764, 
+                    "desiredCount": 1, 
+                    "taskDefinition": "arn:aws:ecs:eu-west-2:149271426415:task-definition/frontend:11", 
+                    "updatedAt": 1505379953.764, 
+                    "id": "ecs-svc/9223370531474822043", 
+                    "runningCount": 1
+                }
+            ], 
+            "events": [
+                {
+                    "message": "(service awsEcsAkkaHttpService2) has reached a steady state.", 
+                    "id": "c7fe6e4e-9352-4e35-8973-863e5df2f7e0", 
+                    "createdAt": 1505380028.502
+                }, 
+                {
+                    "message": "(service awsEcsAkkaHttpService2) registered 1 instances in (elb awsEcsAkkaHttpLB)", 
+                    "id": "244c9466-d7f5-4209-b8ab-fe641802d376", 
+                    "createdAt": 1505379966.276
+                }, 
+                {
+                    "message": "(service awsEcsAkkaHttpService2) has started 1 tasks: (task 658e50e4-2f3b-4c0f-b3b3-85e58b3467ce).", 
+                    "id": "b3e0ee4f-b596-48bf-8b1a-c44271ec0d58", 
+                    "createdAt": 1505379956.44
+                }
+            ], 
+            "runningCount": 1, 
+            "placementStrategy": [
+                {
+                    "field": "attribute:ecs.availability-zone", 
+                    "type": "spread"
+                }, 
+                {
+                    "field": "instanceId", 
+                    "type": "spread"
+                }
+            ]
+        }
+    ], 
+    "failures": []
+}
