@@ -5,14 +5,14 @@ phases:
   build:
     commands:
       - echo Build started on `date`
-      - aws s3 cp s3://aws-ecs-akka-http1/akkaHttp-assembly-0.1-SNAPSHOT.jar .
-      - aws ecr get-login --region eu-west-2 | sh
-      - docker build -t awsecsakkahttp1 .
-      - docker tag awsecsakkahttp1:latest 149271426415.dkr.ecr.eu-west-2.amazonaws.com/awsecsakkahttp1:latest 
-      - docker push 149271426415.dkr.ecr.eu-west-2.amazonaws.com/awsecsakkahttp1:latest
+      - aws s3 cp $JAR_ARTIFACT_SOURCE .
+      - aws ecr get-login --region $REGION | sh
+      - docker build -t $ECR_IMAGE .
+      - docker tag $ECR_IMAGE:$ECR_TAG $ECR_URL/$ECR_IMAGE:$ECR_TAG
+      - docker push $ECR_URL/$ECR_IMAGE:$ECR_TAG
       - chmod +x ecs-deploy
       - chmod +x jq-linux64
-      - ./ecs-deploy -c mycluster2 -n awsEcsAkkaHttpService2 -i 149271426415.dkr.ecr.eu-west-2.amazonaws.com/awsecsakkahttp1
+      - ./ecs-deploy -c $ECS_CLUSTER -n $ECS_SERVICE -i $ECR_URL/$ECR_IMAGE
   post_build:
     commands:
       - echo Build completed on `date`
