@@ -8,12 +8,12 @@ phases:
       - aws s3 cp s3://$JAR_ARTIFACT_BUCKET/$JAR_ARTIFACT_KEY .
       - sed -e "s/\${JAR_ARTIFACT_KEY}/$JAR_ARTIFACT_KEY/" Dockerfile.template > Dockerfile
       - aws ecr get-login --region $REGION | sh
-      - docker build -t $ECR_IMAGE .
-      - docker tag $ECR_IMAGE:$ECR_TAG $ECR_URL/$ECR_IMAGE:$ECR_TAG
-      - docker push $ECR_URL/$ECR_IMAGE:$ECR_TAG
+      - docker build -t $ECR_REPO_NAME .
+      - docker tag $ECR_REPO_NAME:$ECR_TAG $ECR_URL:$ECR_TAG
+      - docker push $ECR_URL:$ECR_TAG
       - chmod +x ecs-deploy
       - chmod +x jq-linux64
-      - ./ecs-deploy -c $ECS_CLUSTER -n $ECS_SERVICE -i $ECR_URL/$ECR_IMAGE
+      - ./ecs-deploy -c $ECS_CLUSTER -n $ECS_SERVICE -i $ECR_URL
   post_build:
     commands:
       - echo Build completed on `date`
